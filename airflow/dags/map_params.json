@@ -1,0 +1,15 @@
+{
+    "map_params":{
+        "minlon": 180,
+        "maxlon": 180,
+        "minlat": 75,
+        "maxlat": 90,
+        "cenlon": -5,
+        "cenlat": 85,
+        "radius": 15,
+        "shape":"rectangular",
+        "coast_res": "high",
+        "coloring_db": "IBCAO",
+        "depth": 5
+    }
+}

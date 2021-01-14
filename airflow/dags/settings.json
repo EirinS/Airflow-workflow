@@ -1,0 +1,7 @@
+{
+    "ap_cfg":{
+        "matlab_code_path":"~/Arctic.Ocean-v2",
+        "database_dir":"~/dataBase",
+        "rig_files":"~/priorRuns"        
+    }
+}
