@@ -1,6 +1,7 @@
 {
     "ap_cfg":{
         "matlab_code_path":"~/Arctic.Ocean-v2",
+        "models_code_path":"~/Acoustic.Models",
         "database_dir":"~/dataBase",
         "rig_files":"~/priorRuns"        
     }
