@@ -3,6 +3,7 @@ from airflow import DAG
 
 # Operators; we need this to operate!
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.utils.dates import days_ago
 from airflow.models import Variable
 from airflow.utils.task_group import TaskGroup
@@ -45,11 +46,20 @@ with DAG(
         bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd prepareInput; \
         srcs = load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'); src = srcs(1, :); \
         rcvrs = load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'); rcvr = rcvrs(3, :); \
-        create_temp_files(10, 5, src, rcvr, \'{{ var.json.ap_cfg.database_dir }}\', 0, 0, 0);"',
+        prepare_input_files(10, 5, src, rcvr, \'{{ var.json.ap_cfg.database_dir }}\', 0, 0, 0);"',
         dag=ArcticOceanDag
     )
 
-    with TaskGroup("ram_model") as ram_model:
+    def select_model(**kwargs):
+        return('ram_model.prepare_ram')
+
+    branching = BranchPythonOperator(
+        task_id='select_models',
+        python_callable=select_model,
+        dag=ArcticOceanDag
+    )
+
+    with TaskGroup('ram_model') as ram_model:
         prepare_ram = BashOperator(
             task_id='prepare_ram',
             bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/RAM; \
@@ -58,7 +68,7 @@ with DAG(
         )
         move_files = BashOperator(
             task_id='move_ram_files',
-            bash_command='mv -f {{ var.json.ap_cfg.matlab_code_path}}/models/RAM/ram.in {{ var.json.ap_cfg.models_code_path}}/RAM/data',
+            bash_command='mv -f {{ var.json.ap_cfg.matlab_code_path}}/models/RAM/ram.in {{ var.json.ap_cfg.models_code_path}}/RAM/data ',
             dag=ArcticOceanDag
         )
         run_ram = BashOperator(
@@ -69,7 +79,7 @@ with DAG(
         prepare_ram >> move_files >> run_ram
         
 
-    with TaskGroup("bellhop_model") as bellhop_model:
+    with TaskGroup('bellhop_model') as bellhop_model:
         prepare_bellhop = BashOperator(
             task_id='prepare_bellhop',
             bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Bellhop; \
@@ -90,7 +100,7 @@ with DAG(
         )
         prepare_bellhop >> move_files >> run_bellhop
 
-    with TaskGroup("eigenray_model") as eigenray_model:
+    with TaskGroup('eigenray_model') as eigenray_model:
         prepare_eigenray = BashOperator(
             task_id='prepare_eigenray',
             bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Eigenray; \
@@ -113,7 +123,7 @@ with DAG(
         prepare_eigenray >> move_files >> run_eigenray
 
 
-    with TaskGroup("mpiram_model") as mpiram_model:
+    with TaskGroup('mpiram_model') as mpiram_model:
         prepare_mpiram = BashOperator(
             task_id='prepare_mpiram',
             bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/mpiRAM; \
@@ -137,4 +147,4 @@ with DAG(
 
 
 get_config >> [create_map, prepare_input] 
-prepare_input >> [ram_model, bellhop_model, eigenray_model, mpiram_model]
+prepare_input >> branching >> [ram_model, bellhop_model, eigenray_model, mpiram_model]
