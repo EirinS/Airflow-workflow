@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+  <head>
+    <!-- BASIC DEPENDENCIES -->
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+
+    <!-- DEPENDENCIE FOR FILEUPLOAD  -->
+    <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
+
+    <!-- DEPENDENCIE FOR DOMAINS-->
+    <!-- BOOTSTRAP DEPENDENCIES -->
+    <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css"/>
+    <script src="bower_components/moment/min/moment.min.js"></script>
+
+    <!-- LIB DEPENDENCIES -->
+    <script src="json-gui.js"></script>
+    <link rel="stylesheet" href="json-gui.css" />
+    <script src="mainController.js"></script>
+  </head>
+
+  <body>
+    <div ng-controller="modelController">
+      <json-gui data="data"></json-gui>
+      <div class="row">
+        <div class="col-xs-4 col-xs-offset-4  col-md-2 col-md-offset-5">
+          <button ng-click="getAllResults()" class="btn btn-success">Save configuration</button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+</html>
