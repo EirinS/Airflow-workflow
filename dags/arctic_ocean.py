@@ -7,6 +7,8 @@ from airflow.operators.python import BranchPythonOperator
 from airflow.utils.dates import days_ago
 from airflow.models import Variable
 from airflow.utils.task_group import TaskGroup
+import base64
+import os
 
 DAG_NAME = 'ArcticOcean'
 with DAG(
@@ -18,28 +20,40 @@ with DAG(
 
     get_config = BashOperator(
         task_id="get_config",
-        bash_command='echo "{0}"'.format('{{ var.json.ap_params }}'),
+        bash_command='echo "{0}"'.format('{{ dag_run.conf }}'),
         dag=ArcticOceanDag
     )
 
     create_map = BashOperator(
         task_id='create_map',
         bash_command='matlab -batch \
-            "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd map; disp(\'creating map...\');\
+           "cd {{ var.json.ap_cfg.matlab_code_path }}; prepare_paths(); cd map; disp(\'creating map...\');\
             savefig(plot_map( \
-            \'{{ var.json.ap_params.coast_res }}\', \'{{ var.json.ap_params.coloring_db }}\', \
-            {{ var.json.ap_params.minlon }}, {{ var.json.ap_params.maxlon }}, \
-            {{ var.json.ap_params.minlat }}, {{ var.json.ap_params.maxlat }}, \
-            {{ var.json.ap_params.cenlon }}, {{ var.json.ap_params.cenlat }}, \
-            {{ var.json.ap_params.radius }}, \'{{ var.json.ap_params.shape }}\', \
-            {{ var.json.ap_params.depth }}), \
+            \'{{ dag_run.conf.map.coast_res }}\', \'{{ dag_run.conf.map.color_db }}\', \
+            {{ dag_run.conf.map.minlon }}, {{ dag_run.conf.map.maxlon }}, \
+            {{ dag_run.conf.map.minlat }}, {{ dag_run.conf.map.maxlat }}, \
+            {{ dag_run.conf.map.cenlon }}, {{ dag_run.conf.map.cenlat }}, \
+            {{ dag_run.conf.map.radius }}, \'{{ dag_run.conf.map.shape }}\', \
+            {{ dag_run.conf.map.depth }}), \
             \'map.fig\'); \
-            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\', \'magenta\', \'o\'), \'map.fig\'); disp(\'receivers plotted.\');\
-            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\', \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');\
-            savefig(plot_paths(\'map.fig\', load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'), load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'), \
-            [{{ var.json.ap_params.minlon }} {{ var.json.ap_params.maxlon }} {{ var.json.ap_params.minlat }} {{ var.json.ap_params.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');"',
+            savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'), \'magenta\', \'o\'), \'map.fig\'); disp(\'receivers plotted.\'); \
+            savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');"',
         dag=ArcticOceanDag,
     )
+
+    """
+            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\', \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');\
+            savefig(plot_paths(\'map.fig\', load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'), load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'), \
+            [{{ var.json.ap_params.minlon }} {{ var.json.ap_params.maxlon }} {{ var.json.ap_params.minlat }} {{ var.json.ap_params.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');
+    """
+        
+
+    """
+     \
+            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\', \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');\
+            savefig(plot_paths(\'map.fig\', load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'), load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'), \
+            [{{ var.json.ap_params.minlon }} {{ var.json.ap_params.maxlon }} {{ var.json.ap_params.minlat }} {{ var.json.ap_params.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');
+
 
     prepare_input = BashOperator(
         task_id='prepare_input',
@@ -145,6 +159,6 @@ with DAG(
         )
         prepare_mpiram >> move_files >> run_mpiram
 
-
-get_config >> [create_map, prepare_input] 
-prepare_input >> branching >> [ram_model, bellhop_model, eigenray_model, mpiram_model]
+"""
+#get_config >> create_map #[create_map, prepare_input] 
+#prepare_input >> branching >> [ram_model, bellhop_model, eigenray_model, #mpiram_model]
