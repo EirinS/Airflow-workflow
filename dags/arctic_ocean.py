@@ -37,30 +37,19 @@ with DAG(
             {{ dag_run.conf.map.depth }}), \
             \'map.fig\'); \
             savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'), \'magenta\', \'o\'), \'map.fig\'); disp(\'receivers plotted.\'); \
-            savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');"',
+            savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\'); \
+            savefig(plot_paths(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'), \
+            [{{ dag_run.conf.map.minlon }} {{ dag_run.conf.map.maxlon  }} {{ dag_run.conf.map.minlat }} {{ dag_run.conf.map.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');"',
         dag=ArcticOceanDag,
     )
-
-    """
-            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\', \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');\
-            savefig(plot_paths(\'map.fig\', load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'), load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'), \
-            [{{ var.json.ap_params.minlon }} {{ var.json.ap_params.maxlon }} {{ var.json.ap_params.minlat }} {{ var.json.ap_params.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');
-    """
-        
-
-    """
-     \
-            savefig(plot_rigs(\'map.fig\', \'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\', \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\');\
-            savefig(plot_paths(\'map.fig\', load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'), load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'), \
-            [{{ var.json.ap_params.minlon }} {{ var.json.ap_params.maxlon }} {{ var.json.ap_params.minlat }} {{ var.json.ap_params.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');
 
 
     prepare_input = BashOperator(
         task_id='prepare_input',
         bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd prepareInput; \
-        srcs = load(\'{{ var.json.ap_params.source_file[0][\'fileName\'] }}\'); src = srcs(1, :); \
-        rcvrs = load(\'{{ var.json.ap_params.receiver_file[0][\'fileName\'] }}\'); rcvr = rcvrs(3, :); \
-        prepare_input_files(10, 5, src, rcvr, \'{{ var.json.ap_cfg.database_dir }}\', 0, 0, 0);"',
+        srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+        rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+        prepare_input_files({{ dag_run.conf.model.delR }}, {{ dag_run.conf.model.delC }}, src, rcvr, \'{{ var.json.ap_cfg.database_dir }}\', {{ dag_run.conf.model.ssp_database }}, {{ dag_run.conf.model.profile_type }}, {{ dag_run.conf.model.timestep }});"',
         dag=ArcticOceanDag
     )
 
@@ -159,6 +148,5 @@ with DAG(
         )
         prepare_mpiram >> move_files >> run_mpiram
 
-"""
-#get_config >> create_map #[create_map, prepare_input] 
-#prepare_input >> branching >> [ram_model, bellhop_model, eigenray_model, #mpiram_model]
+get_config >> [create_map, prepare_input] 
+prepare_input >> branching >> [ram_model, bellhop_model, eigenray_model, mpiram_model]
