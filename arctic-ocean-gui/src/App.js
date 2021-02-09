@@ -199,19 +199,23 @@ function App() {
             properties: {
               "run_ram": {
                 title: "RAM",
-                "type": "boolean"
+                "type": "boolean",
+                default: false,
               },
               "run_mpiram": {
                 title: "MPIRAM",
-                "type": "boolean"
+                "type": "boolean",
+                default: false,
               },
               "run_bellhop": {
                 title: "Bellhop",
-                type: "boolean"
+                type: "boolean",
+                default: false,
               },
               "run_eigenray": {
                 title: "Eigenray",
-                type: "boolean"
+                type: "boolean",
+                default: false
               }
             },
             "dependencies": {
@@ -346,11 +350,15 @@ function App() {
                         properties: {
                           "run_type": {
                             title: "Run type",
-                            type: "string",
-                            default: "Eigenray",
-                            enum: [
+                            type: "integer",
+                            default: 0,
+                            enumNames: [
                               "Eigenray",
                               "Timefront",
+                            ],
+                            enum: [
+                              0,
+                              1
                             ]
                           },
                           "ray_num": {
@@ -388,7 +396,7 @@ function App() {
                     }
                   }
                 ]
-              },// gher
+              },
             },
           },
         },
@@ -416,21 +424,11 @@ function App() {
         "ui:disabled": true,
       },
       "model_choice": {
-        "RAM": {
-          //"ui:title": " ",
-        },
-        "MPIRAM": {
-          //"ui:title": " ",
-        },
         "Bellhop": {
-          //"ui:title": " ",
           simtype: {
             "ui:widget": "checkboxes",
           },
         },
-        "Eigenray": {
-          //"ui:title": " ",
-        }
       }
     }
   }
