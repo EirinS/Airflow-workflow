@@ -38,15 +38,16 @@ with DAG(
             savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'), \'magenta\', \'o\'), \'map.fig\'); disp(\'receivers plotted.\'); \
             savefig(plot_rigs(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), \'white\', \'*\'), \'map.fig\'); disp(\'sources plotted.\'); \
             savefig(plot_paths(\'map.fig\', base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'), base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'), \
-            [{{ dag_run.conf.map.minlon }} {{ dag_run.conf.map.maxlon  }} {{ dag_run.conf.map.minlat }} {{ dag_run.conf.map.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\');"',
+            [{{ dag_run.conf.map.minlon }} {{ dag_run.conf.map.maxlon  }} {{ dag_run.conf.map.minlat }} {{ dag_run.conf.map.maxlat }}]), \'map.fig\'); disp(\'paths plotted.\'); disp(\'Done.\'); \
+            saveas(gcf, \'{{ var.json.ap_cfg.save_dir }}/map_{{ ts_nodash }}.png\');"',
         dag=ArcticOceanDag,
     )
 
     prepare_input = BashOperator(
         task_id='prepare_input',
-        bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd prepareInput; \
-        srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
-        rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+        bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd prepareInput; disp(\'go to prepare input\'); \
+        srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); disp(\'loaded sources\'); disp(src); \
+        rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); disp(\'loaded receivers\'); disp(rcvr); \
         prepare_input_files({{ dag_run.conf.model.delR }}, {{ dag_run.conf.model.delC }}, src, rcvr, \'{{ var.json.ap_cfg.database_dir }}\', {{ dag_run.conf.model.ssp_database }}, {{ dag_run.conf.model.profile_type }}, {{ dag_run.conf.model.timestep }});"',
         dag=ArcticOceanDag
     )
@@ -91,7 +92,19 @@ with DAG(
             bash_command='cd {{ var.json.ap_cfg.models_code_path}}/RAM; bash launch_ram.sh ',
             dag=ArcticOceanDag
         )
-        prepare_ram >> move_files >> run_ram
+
+        plot_ram_result = BashOperator(
+            task_id='plot_ram_result',
+            bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/RAM; \
+            srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+            rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+            r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
+            z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
+            res = read_ram_result({{ dag_run.conf.model.model_choice.RAM.freq }}, src(3), rcvr(3), r, z, \'{{ var.json.ap_cfg.models_code_path}}/RAM/data/tl.grid\'); \
+            fig = figure(\'visible\', \'off\'); plot_ram(res.freq, res.zs, res.zr, res.r, res.z, res.ttRAM, res.rdRAM, res.rrRAM); saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/ram_{{ ts_nodash }}.png\')"',
+            dag=ArcticOceanDag
+        )
+        prepare_ram >> move_files >> run_ram >> plot_ram_result
         
     for simtype in ["E", "R", "C", "S", "I"]:
         with TaskGroup(f'bellhop_model_{simtype}') as bellhop_model:
@@ -114,10 +127,11 @@ with DAG(
             
             run_bellhop = BashOperator(
                 task_id='run_bellhop',
-                bash_command='cd {{ var.json.ap_cfg.models_code_path}}/Bellhop; bash launch_bellhop.sh ',
+                bash_command='cd {{ var.json.ap_cfg.models_code_path}}/Bellhop; bash launch_bellhop.sh belltemp_{{ params.simtype }} ',
+                params={'simtype': simtype},
                 dag=ArcticOceanDag
             )
-            prepare_bellhop >> move_files >> run_bellhop
+            branching >> prepare_bellhop >> move_files >> run_bellhop
 
     with TaskGroup('eigenray_model') as eigenray_model:
         prepare_eigenray = BashOperator(
