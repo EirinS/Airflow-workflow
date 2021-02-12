@@ -96,12 +96,14 @@ with DAG(
         plot_ram_result = BashOperator(
             task_id='plot_ram_result',
             bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/RAM; \
-            srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
-            rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
-            r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
-            z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
-            res = read_ram_result({{ dag_run.conf.model.model_choice.RAM.freq }}, src(3), rcvr(3), r, z, \'{{ var.json.ap_cfg.models_code_path}}/RAM/data/tl.grid\'); \
-            fig = figure(\'visible\', \'off\'); plot_ram(res.freq, res.zs, res.zr, res.r, res.z, res.ttRAM, res.rdRAM, res.rrRAM); saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/ram_{{ ts_nodash }}.png\')"',
+                srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+                rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+                r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
+                z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
+                res = read_ram_result({{ dag_run.conf.model.model_choice.RAM.freq }}, src(3), rcvr(3), r, z, \'{{ var.json.ap_cfg.models_code_path}}/RAM/data/tl.grid\'); \
+                fig = figure(\'visible\', \'off\'); \
+                plot_ram(res.freq, res.zs, res.zr, res.r, res.z, res.ttRAM, res.rdRAM, res.rrRAM); \
+                saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/ram_{{ ts_nodash }}.png\')"',
             dag=ArcticOceanDag
         )
         prepare_ram >> move_files >> run_ram >> plot_ram_result
@@ -113,25 +115,40 @@ with DAG(
                 bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Bellhop; \
                 srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
                 rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
-                prepare_bellhop_input({{ dag_run.conf.model.model_choice.Bellhop.freq }}, \'{{ params.simtype }}\', src(3), rcvr(3), \'belltemp_{{ params.simtype }}\');"',
+                prepare_bellhop_input({{ dag_run.conf.model.model_choice.Bellhop.freq }}, \'{{ params.simtype }}\', src(3), rcvr(3), \'{{ var.json.ap_cfg.models_code_path}}/Bellhop/data/belltemp_{{ params.simtype }}\');"',
                 params={'simtype': simtype},
                 dag=ArcticOceanDag
             )
-            
+            """
             move_files = BashOperator(
                 task_id='move_bellhop_files',
                 bash_command='mv -f {{ var.json.ap_cfg.matlab_code_path}}/models/Bellhop/belltemp_{{ params.simtype }}.* {{ var.json.ap_cfg.models_code_path}}/Bellhop/data',
                 params={'simtype': simtype},
                 dag=ArcticOceanDag
             )
-            
+            """
             run_bellhop = BashOperator(
                 task_id='run_bellhop',
                 bash_command='cd {{ var.json.ap_cfg.models_code_path}}/Bellhop; bash launch_bellhop.sh belltemp_{{ params.simtype }} ',
                 params={'simtype': simtype},
                 dag=ArcticOceanDag
             )
-            branching >> prepare_bellhop >> move_files >> run_bellhop
+
+            plot_bellhop_result = BashOperator(
+                task_id='plot_bellhop_result',
+                bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Bellhop; addpath(\'Matlab\'); \
+                srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+                rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+                r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
+                z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
+                fig = figure(\'visible\', \'off\'); \
+                plot_bellhop({{ dag_run.conf.model.model_choice.Bellhop.freq }}, \'{{ params.simtype }}\', src(3), rcvr(3), r, z, \'{{ var.json.ap_cfg.models_code_path}}/Bellhop/data/belltemp_{{ params.simtype }}\'); \
+                saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/bellhop_{{ params.simtype }}_{{ ts_nodash }}.png\')"',
+                params={'simtype': simtype},
+                dag=ArcticOceanDag
+            )
+
+            branching >> prepare_bellhop >> run_bellhop >> plot_bellhop_result
 
     with TaskGroup('eigenray_model') as eigenray_model:
         prepare_eigenray = BashOperator(
@@ -155,7 +172,51 @@ with DAG(
             bash_command='cd {{ var.json.ap_cfg.models_code_path}}/eigenraymp; bash launch_eigenray.sh ',
             dag=ArcticOceanDag
         )
-        prepare_eigenray >> move_files >> run_eigenray
+
+        def select_plot(**context):
+            eigenray_model = context['dag_run'].conf['model']['model_choice']['Eigenray']['run_type']
+            if eigenray_model == 0:
+                return 'eigenray_model.plot_eigenray'
+            if eigenray_model == 1:
+                return 'eigenray_model.plot_timefront'
+            return []
+
+        select_plot = BranchPythonOperator(
+            task_id='select_plot',
+            python_callable=select_plot,
+            dag=ArcticOceanDag
+        )
+
+        plot_timefront = BashOperator(
+            task_id='plot_timefront',
+            bash_command = 'matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Eigenray; \
+            srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+            rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+            r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
+            z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
+            res = read_eigenray_result(\'timefront\', r, z, src(3), rcvr(3), \'{{ var.json.ap_cfg.models_code_path}}/eigenraymp/data/ray.info\', \'\'); \
+            fig = figure(\'visible\', \'off\'); \
+            plot_timefront(res.nERays, res.arr_time, res.z_rec, res.blue_tpft, res.blue_tpfa, res.red_tpft, res.red_tpfa); \
+            saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/eigenray_timefront_{{ ts_nodash }}.png\')"',
+            dag=ArcticOceanDag,
+        )
+
+        plot_eigenray = BashOperator(
+            task_id='plot_eigenray',
+            bash_command='matlab -batch "cd {{ var.json.ap_cfg.matlab_code_path}}; prepare_paths(); cd models/Eigenray; \
+            srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
+            rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
+            r = load(\'{{ var.json.ap_cfg.tmp_dir }}/rangeBath.txt\'); \
+            z = load(\'{{ var.json.ap_cfg.tmp_dir }}/depth.txt\'); \
+            if strcmp(\'{{ dag_run.conf.model.model_choice.Eigenray.save_paths }}\', \'True\'); rayfile = \'{{ var.json.ap_cfg.models_code_path}}/eigenraymp/data/ray.data\'; else rayfile = \'\'; end; \
+            res = read_eigenray_result(\'eigenray\', r, z, src(3), rcvr(3), \'{{ var.json.ap_cfg.models_code_path}}/eigenraymp/data/ray.info\', rayfile); \
+            fig = figure(\'visible\', \'off\'); \
+            plot_eigenray(res.r, res.z, res.zs, res.zr, res.nERays, res.arr_time, res.arr_angle, res.ray); \
+            saveas(fig, \'{{ var.json.ap_cfg.save_dir }}/eigenray_{{ ts_nodash }}.png\')"',
+            dag=ArcticOceanDag,
+        )
+
+        prepare_eigenray >> move_files >> run_eigenray >> select_plot >> [plot_eigenray, plot_timefront]
 
 
     with TaskGroup('mpiram_model') as mpiram_model:
