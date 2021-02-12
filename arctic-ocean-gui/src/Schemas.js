@@ -6,7 +6,7 @@ const schema = {
         "map": {
             title: "Create map",
             type: "object",
-            required: ["coast_res", "color_db", "minlon", "maxlon", "minlat", "maxlat", "cenlon", "cenlat", /*"source_file", "receiver_file",*/ "depth", "radius", "shape"],
+            required: ["coast_res", "color_db", "minlon", "maxlon", "minlat", "maxlat", "cenlon", "cenlat", "source_file", "receiver_file", "depth", "radius", "shape"],
             properties: {
                 "coast_res": {
                     title: "Coastline resolution",
@@ -198,6 +198,7 @@ const schema = {
                     title: "Select model(s) to run",
                     description: "Select one or more models to run with the given parameters.",
                     type: "object",
+                    required: ["run_ram", "run_mpiram", "run_bellhop", "run_eigenray"],
                     properties: {
                         "run_ram": {
                             title: "RAM",
@@ -236,6 +237,7 @@ const schema = {
                                             "const": true
                                         },
                                         "RAM": {
+                                            required: ["freq"],
                                             properties: {
                                                 "freq": {
                                                     "title": "frequency",
@@ -263,6 +265,7 @@ const schema = {
                                             "const": true
                                         },
                                         "MPIRAM": {
+                                            required: ["freq", "time_window", "q_value"],
                                             properties: {
                                                 "freq": {
                                                     title: "Frequency",
@@ -300,6 +303,7 @@ const schema = {
                                             "const": true
                                         },
                                         "Bellhop": {
+                                            required: ["freq", "simtype"],
                                             properties: {
                                                 "freq": {
                                                     title: "Frequency",
@@ -349,6 +353,7 @@ const schema = {
                                             "const": true
                                         },
                                         "Eigenray": {
+                                            required: ["run_type", "ray_num", "epsilon", "bot_reflect", "save_paths", "use_bottom", "angle_range"],
                                             properties: {
                                                 "run_type": {
                                                     title: "Run type",
@@ -371,7 +376,7 @@ const schema = {
                                                 "epsilon": {
                                                     title: "Epsilon value",
                                                     type: "string",
-                                                    default: "1e-5"
+                                                    default: "1e-4"
                                                 },
                                                 "bot_reflect": {
                                                     title: "Max number of bottom reflections allowed",
