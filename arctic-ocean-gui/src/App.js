@@ -9,6 +9,7 @@ function App() {
   const api_url = "api/v1/"
   const dag_id = "ArcticOcean"
 
+  /*
   const saveParameters = (event) => {
     console.log(event);
     const fileData = JSON.stringify(event.formData);
@@ -33,7 +34,7 @@ function App() {
       .catch((error) => {
         console.error(error);
       });
-  }
+  }*/
 
   const runDag = (event) => {
     return fetch(api_url + 'dags/' + dag_id + '/dagRuns', {
