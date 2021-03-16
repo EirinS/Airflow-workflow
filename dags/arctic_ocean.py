@@ -142,7 +142,8 @@ with DAG(
                 bash_command='matlab -batch "cd {{ var.json.ap_cfg.project_dir }}; addpath(genpath(pwd)); \
                 srcs = base64_to_mat(\'{{ dag_run.conf.map.source_file }}\'); src = srcs({{ dag_run.conf.model.source }}, :); \
                 rcvrs = base64_to_mat(\'{{ dag_run.conf.map.receiver_file }}\'); rcvr = rcvrs({{ dag_run.conf.model.receiver }}, :); \
-                prepare_bellhop_input({{ dag_run.conf.model.model_choice.Bellhop.freq }}, \'{{ params.simtype }}\', src(3), rcvr(3), \'{{ var.json.ap_cfg.models_dir }}/Bellhop/data/belltemp_{{ params.simtype }}\');"',
+                if strcmp(\'{{ params.simtype }}\', \'E\'); nrays = {{ dag_run.conf.model.model_choice.Bellhop.nerays }}; elseif strcmp(\'{{ params.simtype }}\', \'R\'); nrays = {{ dag_run.conf.model.model_choice.Bellhop.nrays }}; else; nrays = 0; end; \
+                prepare_bellhop_input({{ dag_run.conf.model.model_choice.Bellhop.freq }}, \'{{ params.simtype }}\', src(3), rcvr(3), nrays, \'{{ var.json.ap_cfg.models_dir }}/Bellhop/data/belltemp_{{ params.simtype }}\');"',
                 params={'simtype': simtype},
                 dag=ArcticOceanDag
             )
