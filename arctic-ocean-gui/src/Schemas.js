@@ -429,10 +429,20 @@ const schema = {
                                                             "Coherent transmission loss"
                                                         ]
                                                     },
+                                                },
+                                                "nrays": {
+                                                    "title": "Number of rays for Ray model",
+                                                    "type": "integer",
+                                                    "default": 50,
+                                                },
+                                                "nerays": {
+                                                    "title": "Number of rays for Eigenray model",
+                                                    "type": "integer",
+                                                    "default": 500,
                                                 }
-                                            }
+                                            },
                                         },
-                                    }
+                                    },
                                 }
                             ]
                         },
