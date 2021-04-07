@@ -127,32 +127,32 @@ const schema = {
                     },
                 },
                 "minlon": {
-                    "title": "Minimum longitude",
+                    "title": "Minimum longitude [°E]",
                     "type": "integer",
                     "default": -180,
                 },
                 "maxlon": {
-                    "title": "Maximum longitude",
+                    "title": "Maximum longitude [°E]",
                     "type": "integer",
                     "default": 180,
                 },
+                "cenlon": {
+                    "title": "Center longitude [°E]",
+                    "type": "integer",
+                    "default": -5,
+                },
                 "minlat": {
-                    "title": "Minimum latitude",
+                    "title": "Minimum latitude [°N]",
                     "type": "integer",
                     "default": 70,
                 },
                 "maxlat": {
-                    "title": "Maximum latitude",
+                    "title": "Maximum latitude [°N]",
                     "type": "integer",
                     "default": 90,
                 },
-                "cenlon": {
-                    "title": "Center longitude",
-                    "type": "integer",
-                    "default": -5,
-                },
                 "cenlat": {
-                    "title": "Center latitude",
+                    "title": "Center latitude [°N]",
                     "type": "integer",
                     "default": 85,
                 },
@@ -203,17 +203,17 @@ const schema = {
                 "receiver": {
                     "title": "Select receiver",
                     "description": "Input receiver index (1 is the first line in the input file). Use the map for a visual representation of where the sources and receivers are.",
-                    "default": 3,
+                    "default": 2,
                     "type": "integer",
                 },
                 "delC": {
-                    "title": "delC",
+                    "title": "DR[km]:C",
                     "description": "Sound speed step size",
                     "default": 5,
                     "type": "integer",
                 },
                 "delR": {
-                    "title": "delR",
+                    "title": "DR[km]:z",
                     "description": "Bathymetry step size",
                     "default": 10,
                     "type": "integer",
@@ -226,18 +226,56 @@ const schema = {
                     "enum": [
                         0,
                         1,
-                        2,
-                        3
                     ],
                     "enumNames": [
                         "ECCOv4",
                         "WOA",
-                        "GECCO2007",
-                        "OceanModel"
+                    ]
+                },
+                "timestep":{
+                    "title": "Select timestep",
+                    "description": "Select when to run the model for. ECCO only supports Annual.",
+                    "type": "integer",
+                    "default": 0,
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                    ],
+                    "enumNames": [
+                        "Annual",
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                        "Winter",
+                        "Spring",
+                        "Summer",
+                        "Fall",
                     ]
                 },
                 "profile_type": {
-                    "title": "Select profile",
+                    "title": "Select profile type",
                     "description": "Select profile for modeling",
                     "type": "integer",
                     "default": 0,
@@ -253,24 +291,6 @@ const schema = {
                         "Salinity S(r,z)",
                         "Bouyancy N(r,z) "
                     ]
-                },
-                "timestep": {
-                    "title": "Select timestep",
-                    "description": "Select when to run the model for. Annual uses the annual average.",
-                    "type": "integer",
-                    "default": 0,
-                    "enum": [
-                        0,
-                    ],
-                    "enumNames": [
-                        "Annual",
-                    ]
-                },
-                "save_result": {
-                    "title": "Save model result as a Matlab struct in addition to .png image?",
-                    "description": "Saves the struct in addition to a .png of the plot.",
-                    "type": "boolean",
-                    "default": false,
                 },
                 "model_choice": {
                     "title": "Select model(s) to run",
@@ -353,12 +373,12 @@ const schema = {
                                                 "time_window": {
                                                     "title": "Time window",
                                                     "type": "integer",
-                                                    "default": 5
+                                                    "default": 10
                                                 },
                                                 "q_value": {
                                                     "title": "Q-value",
                                                     "type": "integer",
-                                                    "default": 2
+                                                    "default": 5
                                                 }
                                             }
                                         },
@@ -454,7 +474,7 @@ const schema = {
                                                 "epsilon": {
                                                     "title": "Epsilon value",
                                                     "type": "string",
-                                                    "default": "1e-4"
+                                                    "default": "1e-5"
                                                 },
                                                 "bot_reflect": {
                                                     "title": "Max number of bottom reflections allowed",
@@ -474,7 +494,7 @@ const schema = {
                                                 "angle_range": {
                                                     "title": "Angle range",
                                                     "type": "string",
-                                                    "default": "-15, 15"
+                                                    "default": "-10, 10"
                                                 }
                                             }
                                         }
@@ -485,7 +505,7 @@ const schema = {
                     },
                 },
             },
-        }
+        }, 
     },
 };
 
@@ -506,9 +526,6 @@ const uiSchema = {
         }
     },
     "model": {
-        "timestep": {
-            "ui:disabled": true,
-        },
         "model_choice": {
             "Bellhop": {
                 "simtype": {

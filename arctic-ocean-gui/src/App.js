@@ -9,33 +9,6 @@ function App() {
   const api_url = "api/v1/"
   const dag_id = "ArcticOcean"
 
-  /*
-  const saveParameters = (event) => {
-    console.log(event);
-    const fileData = JSON.stringify(event.formData);
-    const blob = new Blob([fileData], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.download = 'ap_params.json';
-    link.href = url;
-    link.click();
-  }
-
-  const getDags = () => {
-    return fetch(api_url + 'dags?limit=100', {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
-    })
-      .then((response) => {
-        console.log("success:");
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }*/
-
   const runDag = (event) => {
     return fetch(api_url + 'dags/' + dag_id + '/dagRuns', {
       method: 'POST',
