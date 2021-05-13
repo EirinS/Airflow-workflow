@@ -43,6 +43,7 @@ pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}
 * Print tasks: ``airflow tasks list <dag>``
 
 # Set up GUI
+* Run `` npm install `` to install the GUI application
 * Run `` npm start `` to launch the GUI in development mode, alternatively use `` npm run build `` to create a produvtion build of the app.
 * Go to localhost:3000 and the GUI should appear.
 
