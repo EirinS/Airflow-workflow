@@ -68,15 +68,15 @@ with DAG(
     def select_model(**context):
         model_selection = context['dag_run'].conf['model']['model_choice']
         branches = []
-        if model_selection['run_ram'] == True:
+        if model_selection['run_ram']:
             branches.append('ram.prepare')
-        if  model_selection['run_mpiram'] == True:
+        if  model_selection['run_mpiram']:
             branches.append('mpiram.prepare')
-        if model_selection['run_bellhop'] == True:
+        if model_selection['run_bellhop']:
             bellhop_type = model_selection['Bellhop']['simtype']
             for simtype in bellhop_type:
                 branches.append(f'bellhop_{simtype}.prepare')
-        if  model_selection['run_eigenray'] == True:
+        if  model_selection['run_eigenray']:
             branches.append('eigenray.prepare')
         return branches
 

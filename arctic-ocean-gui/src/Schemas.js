@@ -59,11 +59,11 @@ const schema = {
                                             ]
                                         },
                                         "depth": {
-                                            title: "Depth (m)",
-                                            description: "Only changeable for ECCO and Ocean Model",
-                                            type: "number",
-                                            default: 5,
-                                            enum: [5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 116, 127, 140, 154, 172, 195, 223, 257,
+                                            "title": "Depth (m)",
+                                            "description": "Only changeable for ECCO and Ocean Model",
+                                            "type": "number",
+                                            "default": 5,
+                                            "enum": [5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 116, 127, 140, 154, 172, 195, 223, 257,
                                                 300, 351, 410, 477, 553, 635, 722, 814, 910, 1007, 1106, 1206, 1306, 1409, 1517, 1634,
                                                 1765, 1914, 2084, 2276, 2491, 2729, 2990, 3274, 3581, 3911, 4264, 4640, 5039, 5461, 5906]
                                         },
@@ -78,11 +78,11 @@ const schema = {
                                             ]
                                         },
                                         "depth": {
-                                            title: "Depth (m)",
-                                            description: "Only changeable for ECCO and Ocean Model",
-                                            type: "number",
-                                            default: 6.7,
-                                            enum: [6.7, 12.1, 18.5, 26.2, 35.2, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 146.5, 161.5, 180, 200, 220, 240, 260, 301, 327, 361, 402.5, 250, 500, 551.5, 614, 700, 800, 900, 1000, 1100, 1225, 1400, 1600, 1800, 2010, 2270, 2610, 3000, 3400, 3800, 4200, 4600, 5000, 5400, 5800]
+                                            "title": "Depth (m)",
+                                            "description": "Only changeable for ECCO and Ocean Model",
+                                            "type": "number",
+                                            "default": 6.7,
+                                            "enum": [6.7, 12.1, 18.5, 26.2, 35.2, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 146.5, 161.5, 180, 200, 220, 240, 260, 301, 327, 361, 402.5, 250, 500, 551.5, 614, 700, 800, 900, 1000, 1100, 1225, 1400, 1600, 1800, 2010, 2270, 2610, 3000, 3400, 3800, 4200, 4600, 5000, 5400, 5800]
                                         },
                                     },
                                 },
@@ -95,11 +95,11 @@ const schema = {
                                             ]
                                         },
                                         "depth": {
-                                            description: "Only changeable for ECCO and Ocean Model",
-                                            title: "Depth (m)",
-                                            type: "number",
-                                            default: 300,
-                                            enum: [300]
+                                            "description": "Only changeable for ECCO and Ocean Model",
+                                            "title": "Depth (m)",
+                                            "type": "number",
+                                            "default": 300,
+                                            "enum": [300]
                                         },
                                     },
 
@@ -114,11 +114,11 @@ const schema = {
                                             ]
                                         },
                                         "depth": {
-                                            title: "Depth (m)",
-                                            description: "Only changeable for ECCO and Ocean Model",
-                                            type: "number",
-                                            default: 0,
-                                            enum: [0]
+                                            "title": "Depth (m)",
+                                            "description": "Only changeable for ECCO and Ocean Model",
+                                            "type": "number",
+                                            "default": 0,
+                                            "enum": [0]
                                         },
                                     },
                                 },
@@ -232,7 +232,7 @@ const schema = {
                         "WOA",
                     ]
                 },
-                "timestep":{
+                "timestep": {
                     "title": "Select timestep",
                     "description": "Select when to run the model for. ECCO only supports Annual.",
                     "type": "integer",
@@ -515,7 +515,7 @@ const schema = {
                     },
                 },
             },
-        }, 
+        },
     },
 };
 
